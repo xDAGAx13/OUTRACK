@@ -1,4 +1,5 @@
 
+
 {
   "expo": {
     "name": "OUTRACK",
@@ -38,6 +39,20 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra":{
+      "eas":{
+        "projectId":"bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"
+      },
+       "owner": "dagax13",
+       "updates": {
+    "url": "https://u.expo.dev/bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"  
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
   }
+    }
+    
+  },
+  "owner": "dagax13"
 }
