@@ -7,6 +7,8 @@ import { collection, doc, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth/cordova';
 import { auth } from '../../FirebaseConfig';
+import Constants from 'expo-constants'
+
 
 
 
@@ -62,7 +64,7 @@ export default function coachchat() {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'Authorization': `Bearer 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`,
+          'Authorization': `Bearer ${Constants.expoConfig.extra.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
           model: 'gpt-4.1',

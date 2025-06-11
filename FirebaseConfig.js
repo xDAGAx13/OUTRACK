@@ -3,9 +3,11 @@ import { getReactNativePersistence, getAuth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {getFirestore} from 'firebase/firestore';
 import { initializeAuth } from "firebase/auth/cordova";
+import Constants from 'expo-constants'
+
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyD7Yw5mu8J3qxlaF2AjGdrJfP-MmvS7AJI',
+  apiKey: Constants.expoConfig.extra.FIREBASE_API_KEY,
   authDomain: "outrack-22af1.firebaseapp.com",
   projectId: "outrack-22af1",
   storageBucket: "outrack-22af1.firebasestorage.app",
@@ -19,3 +21,5 @@ export const auth = initializeAuth(firebaseapp,{
   persistence: getReactNativePersistence(AsyncStorage),
 
 })
+console.log(firebaseapp.options.projectId);
+console.log(firebaseapp.options.apiKey);
