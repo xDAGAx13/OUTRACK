@@ -5,6 +5,16 @@ export default {
   expo: {
     name: "outrack",
     slug: "outrack",
+    "owner":"dagax13",
+      "updates": {
+    "url": "https://u.expo.dev/778641f5-8e2c-4c01-b818-834b2b8a3121"  
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
+  },
+  "android": {
+      "package": "com.dagax13.outrack"
+    },
     extra: {
       FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
@@ -14,15 +24,9 @@ export default {
       FIREBASE_APP_ID: process.env.FIREBASE_APP_ID,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       "eas":{
-        "projectId":"bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"
-      },
-      "owner":"dagax13",
-      "updates": {
-    "url": "https://u.expo.dev/bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"  
-  },
-  "runtimeVersion": {
-    "policy": "appVersion"
-  }
+        "projectId":"778641f5-8e2c-4c01-b818-834b2b8a3121"
+      }
+      
     },
   },
   

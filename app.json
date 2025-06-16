@@ -42,16 +42,17 @@
     },
     "extra":{
       "eas":{
-        "projectId":"bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"
-      },
-       "owner": "dagax13",
-       "updates": {
-    "url": "https://u.expo.dev/bf14bfdd-6b4a-4253-bcf2-fbe6429609b5"  
+        "projectId":"778641f5-8e2c-4c01-b818-834b2b8a3121"
+      }
+       
+    },
+    "owner":"dagax13",
+      "updates": {
+    "url": "https://u.expo.dev/778641f5-8e2c-4c01-b818-834b2b8a3121"  
   },
   "runtimeVersion": {
     "policy": "appVersion"
   }
-    }
     
   },
   "owner": "dagax13"
