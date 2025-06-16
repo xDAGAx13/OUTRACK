@@ -9,7 +9,7 @@ export default{
     "scheme": "outrack",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "entryPoint": "./index.js",
+    "entryPoint": "expo-router/entry",
     "ios": {
       "supportsTablet": true
     },
