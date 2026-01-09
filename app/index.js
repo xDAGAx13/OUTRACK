@@ -5,6 +5,7 @@ import { Redirect } from 'expo-router';
 import { firebaseapp } from '../FirebaseConfig';
 import { auth } from '../FirebaseConfig';
 
+
 export default function index() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
