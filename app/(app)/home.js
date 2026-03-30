@@ -12,11 +12,15 @@ import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { auth, FIREBASE_DB } from "../../FirebaseConfig";
 import "../../global.css";
+import { greeting } from "../../utils/initializeUserData";
 
 export default function home() {
   const [username, setUsername] = useState("");
   const [lastworkout, setLastworkout] = useState("");
   const router = useRouter();
+  const randomNum = Math.floor(Math.random()*5);
+
+
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -76,32 +80,42 @@ export default function home() {
   return (
     <View className="bg-black flex-1 pb-32">
       {/* TITLE AND GREETING */}
-      <View className="pt-20 flex-col ">
-        <Text className="text-white text-7xl text-center font-bold">
-          OuTrack
+      <View className="pt-16 px-6 pb-6">
+        <Text className="text-orange-500 text-6xl font-extrabold text-center tracking-widest mb-2">
+          OUTRACK
         </Text>
-        <Text className="text-white text-center font-semibold text-4xl">
-          Welcome, {username}
+        <Text className="text-white text-center font-semibold text-3xl mt-1">
+          Welcome back, {username} 👋
+        </Text>
+        <Text className="text-neutral-500 text-center text-lg mt-2">
+          {greeting[randomNum]}
         </Text>
       </View>
-      {/* Last Workout */}
-      <View className="mt-3 items-center flex">
+
+      {/* Last Workout Card */}
+      <View className="mx-4 mb-4">
         <TouchableOpacity
-          className="bg-neutral-800 px-4 py-5 rounded-2xl "
+          className="bg-neutral-900 border border-neutral-700 px-5 py-5 rounded-2xl"
           onPress={() => router.replace("history")}
         >
-          <Text className="text-neutral-400 text-xl">{lastworkout}</Text>
+          <Text className="text-neutral-500 text-sm font-semibold uppercase tracking-widest mb-2">
+            Last Session
+          </Text>
+          <Text className="text-neutral-300 text-xl">
+            {lastworkout || "No workouts logged yet — start one!"}
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row justify-center mt-20">
+      {/* CTA Button */}
+      <View className="mx-4 mt-8">
         <TouchableOpacity
-          className="bg-orange-500 rounded-xl p-4 "
+          className="bg-orange-500 rounded-2xl py-6"
           onPress={() => router.replace("/(app)/workoutlog")}
           activeOpacity={0.7}
         >
-          <Text className="text-center text-4xl text-white font-extrabold p-5">
-            START HUSTLING
+          <Text className="text-center text-3xl text-white font-extrabold tracking-wider">
+            START HUSTLING 🔥
           </Text>
         </TouchableOpacity>
       </View>

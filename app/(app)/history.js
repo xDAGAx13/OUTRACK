@@ -85,27 +85,11 @@ export default function History() {
   };
 
   const renderWorkout = ({ item }) => (
-    <View className="bg-white rounded-2xl p-4  mb-4 shadow-md">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-black mb-1">
-          🗓 {/* Displaying MuscleGroups */}
-          <View className="flex-row flex-wrap mb-2">
-            {[
-              ...new Set(
-                item.exercises.map((exercise) => exercise.muscleGroup)
-              ),
-            ].map((group, idx) => (
-              <View
-                key={idx}
-                className="bg-orange-200 rounded-full px-3 py-1 mr-2 mb-2 h-10 mt-3 justify-center "
-              >
-                <Text className="text-orange-800 font-bold text-lg">
-                  {group}
-                </Text>
-              </View>
-            ))}
-          </View>
-          {/* Displaying Date */}
+    <View className="bg-neutral-900 border border-neutral-700 rounded-2xl p-4 mb-4">
+      {/* Card Header */}
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-neutral-400 text-sm font-semibold uppercase tracking-widest">
+          🗓{" "}
           {new Date(item.createdAt).toLocaleDateString("en-US", {
             weekday: "short",
             month: "long",
@@ -113,7 +97,6 @@ export default function History() {
           })}
         </Text>
         <TouchableOpacity
-          className="justify-center"
           onPress={() =>
             setSelectedWorkoutId(selectedWorkoutId === item.id ? null : item.id)
           }
@@ -124,50 +107,63 @@ export default function History() {
                 ? "chevron-up-outline"
                 : "chevron-down-outline"
             }
-            size={25}
+            size={22}
+            color="#fff"
           />
         </TouchableOpacity>
       </View>
 
-      {selectedWorkoutId === item.id && (
-        <View className="flex-row justify-between">
-          {/* Edit and Delete Icons */}
-
-          {/*  */}
-          <View>
-            {item.exercises.map((exercise, idx) => (
-              <View key={idx} className="mb-2 mt-4">
-                <Text className="text-black font-semibold">
-                  {exercise.exercise}
-                  <Text className="text-gray-500 font-bold">
-                    {" "}
-                    ({exercise.muscleGroup})
-                  </Text>
-                </Text>
-                {exercise.sets.map((set, i) => (
-                  <Text key={i} className="text-gray-700 text-sm">
-                    Set {i + 1}: {set.reps} reps @ {set.weight} kg
-                  </Text>
-                ))}
-              </View>
-            ))}
+      {/* Muscle Group Tags */}
+      <View className="flex-row flex-wrap gap-2 mb-1">
+        {[
+          ...new Set(item.exercises.map((exercise) => exercise.muscleGroup)),
+        ].map((group, idx) => (
+          <View
+            key={idx}
+            className="bg-orange-500 rounded-full px-3 py-1 justify-center"
+          >
+            <Text className="text-white font-semibold text-base">{group}</Text>
           </View>
-          <View className="flex-row justify-end mb-2 space-x-4 mt-4">
-            <View className="flex-col gap-4">
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: `/(app)/editWorkout?workoutId=${item.id}`,
-                  })
-                }
-              >
-                <Ionicons name="pencil" size={25} />
-              </TouchableOpacity>
+        ))}
+      </View>
 
-              <TouchableOpacity onPress={() => handleDeleteWorkout(item.id)}>
-                <Ionicons name="trash" size={25} color="red" />
-              </TouchableOpacity>
+      {/* Expanded Details */}
+      {selectedWorkoutId === item.id && (
+        <View className="mt-3 border-t border-neutral-700 pt-3">
+          {item.exercises.map((exercise, idx) => (
+            <View key={idx} className="mb-3">
+              <Text className="text-white font-semibold text-lg">
+                {exercise.exercise}{" "}
+                <Text className="text-neutral-500 text-base font-normal">
+                  ({exercise.muscleGroup})
+                </Text>
+              </Text>
+              {exercise.sets.map((set, i) => (
+                <Text key={i} className="text-neutral-400 text-base mt-1">
+                  Set {i + 1}: {set.reps} reps @ {set.weight} kg
+                </Text>
+              ))}
             </View>
+          ))}
+
+          {/* Actions */}
+          <View className="flex-row gap-4 mt-2 justify-end">
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: `/(app)/editWorkout?workoutId=${item.id}`,
+                })
+              }
+              className="bg-neutral-800 p-2 rounded-xl"
+            >
+              <Ionicons name="pencil" size={20} color="#fb923c" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleDeleteWorkout(item.id)}
+              className="bg-neutral-800 p-2 rounded-xl"
+            >
+              <Ionicons name="trash" size={20} color="#ef4444" />
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -184,7 +180,7 @@ export default function History() {
 
   return (
     <ScrollView className="bg-black flex-1 px-4 pt-8 pb-32">
-      <Text className="text-white text-4xl font-semibold text-center mb-6">
+      <Text className="text-white text-5xl font-bold text-center mb-6">
         Workout History
       </Text>
 

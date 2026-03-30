@@ -133,51 +133,54 @@ export default function workoutlog() {
 
   return (
     <View className="flex-1 bg-black">
-    <ScrollView className="p-4 bg-black flex-1 mb-12">
-      <Text className="text-white text-3xl text-center font-semibold mb-6">
-        Build Your Workout
-      </Text>
-
-      {exerciseInputs.map((block, index) => (
-        <ExerciseBlock
-          key={block.id}
-          block={block}
-          index={index}
-          muscleOptions={muscleOptions}
-          exerciseMap={exerciseMap}
-          updateInput={updateInput}
-          updateSetValue={updateSetValue}
-          addSetToBlock={addSetToBlock}
-          removeSetFromBlock={removeSetFromBlock}
-          removeExerciseBlock={removeExerciseBlock}
-        />
-      ))}
-
-      <TouchableOpacity
-        onPress={addExerciseBlock}
-        className="bg-gray-700 rounded-xl py-4 mb-4"
-      >
-        <Text className="text-white text-center text-lg font-semibold">
-          + Add Another Exercise
+      <ScrollView className="flex-1 bg-black px-4 pt-14" contentContainerStyle={{ paddingBottom: 120 }}>
+        <Text className="text-orange-500 text-xs font-semibold uppercase tracking-widest text-center mb-1">
+          Log Session
         </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={async () => {
-          const result = await logWorkout(exerciseInputs);
-          if (result.success) {
-            Alert.alert("Workout Logged Successfully!");
-          } else {
-            Alert.alert("Failed to log workout: " + result.message);
-          }
-        }}
-        className="bg-orange-400 rounded-xl py-4 mb-20"
-      >
-        <Text className="text-white text-center text-2xl font-bold">
-          Finish Workout
+        <Text className="text-white text-3xl text-center font-bold mb-6">
+          Build Your Workout 💪
         </Text>
-      </TouchableOpacity>
-    </ScrollView>
+
+        {exerciseInputs.map((block, index) => (
+          <ExerciseBlock
+            key={block.id}
+            block={block}
+            index={index}
+            muscleOptions={muscleOptions}
+            exerciseMap={exerciseMap}
+            updateInput={updateInput}
+            updateSetValue={updateSetValue}
+            addSetToBlock={addSetToBlock}
+            removeSetFromBlock={removeSetFromBlock}
+            removeExerciseBlock={removeExerciseBlock}
+          />
+        ))}
+
+        <TouchableOpacity
+          onPress={addExerciseBlock}
+          className="bg-neutral-800 border border-neutral-600 rounded-2xl py-4 mb-3"
+        >
+          <Text className="text-white text-center text-lg font-semibold">
+            + Add Exercise
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={async () => {
+            const result = await logWorkout(exerciseInputs);
+            if (result.success) {
+              Alert.alert("Workout Logged Successfully!");
+            } else {
+              Alert.alert("Failed to log workout: " + result.message);
+            }
+          }}
+          className="bg-orange-500 rounded-2xl py-5 mt-2"
+        >
+          <Text className="text-white text-center text-xl font-extrabold tracking-wide">
+            Finish Workout ✅
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
