@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import "../../global.css";
@@ -46,7 +46,6 @@ export default function AppLayout() {
               borderBottomWidth:0,
               flexDirection: 'row',
               display:'flex',
-              alignItems:'',
               
             },
             tabBarItemStyle: {

@@ -12,7 +12,6 @@ import {
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { getAuth } from "firebase/auth/cordova";
 import { auth } from "../FirebaseConfig";
 
 export default function login() {

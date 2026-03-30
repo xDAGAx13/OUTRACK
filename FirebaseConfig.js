@@ -1,9 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getReactNativePersistence, getAuth } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuth } from "firebase/auth";
 import {getFirestore} from 'firebase/firestore';
-import { initializeAuth } from "firebase/auth/cordova";
 import Constants from 'expo-constants'
+import { Platform } from 'react-native';
 
 
 const firebaseConfig = {
@@ -17,7 +16,16 @@ const firebaseConfig = {
 
 export const firebaseapp = initializeApp(firebaseConfig);
 export const FIREBASE_DB = getFirestore(firebaseapp)
-export const auth = initializeAuth(firebaseapp,{
-  persistence: getReactNativePersistence(AsyncStorage),
 
-})
+function createAuth() {
+  if (Platform.OS === 'web') {
+    return getAuth(firebaseapp);
+  }
+  const { initializeAuth, getReactNativePersistence } = require('firebase/auth');
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  return initializeAuth(firebaseapp, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+}
+
+export const auth = createAuth();
