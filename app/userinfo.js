@@ -11,7 +11,6 @@ import {  FIREBASE_DB } from "../FirebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
-import { getAuth } from "firebase/auth/cordova";
 import { auth } from "../FirebaseConfig";
 
 export default function userinfo() {
@@ -55,7 +54,7 @@ export default function userinfo() {
         doc(FIREBASE_DB, `users/${user.uid}/userinfo/profile`),
         form
       );
-      router.replace("(app)/home");
+      router.replace("/(app)/home");
     } catch (e) {
       Alert.alert("Error", e.message);
     }

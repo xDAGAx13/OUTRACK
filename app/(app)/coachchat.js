@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import {  FIREBASE_DB } from '../../FirebaseConfig';
 import { collection, doc, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth } from 'firebase/auth/cordova';
 import { auth } from '../../FirebaseConfig';
 import Constants from 'expo-constants'
 
@@ -13,7 +12,7 @@ import Constants from 'expo-constants'
 
 
 export default function coachchat() {
-  const [input, setInput] = useState([]);
+  const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [context, setContext] = useState('');

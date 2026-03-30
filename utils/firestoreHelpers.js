@@ -1,12 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { FIREBASE_AUTH, FIREBASE_DB } from '../FirebaseConfig'
+import { auth, FIREBASE_DB } from '../FirebaseConfig'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 
-export default logWorkout = async({muscleGroups, exercises}) =>{
+const logWorkout = async({muscleGroups, exercises}) =>{
   try{
-    const user = FIREBASE_AUTH.currentUser;
+    const user = auth.currentUser;
     if(!user) throw new Error("User not logged in!");
 
     const workoutRef = collection(FIREBASE_DB, "users", user.uid, "workouts");
@@ -23,3 +21,5 @@ export default logWorkout = async({muscleGroups, exercises}) =>{
     return false;
   }
 };
+
+export default logWorkout;

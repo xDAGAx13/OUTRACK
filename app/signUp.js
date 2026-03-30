@@ -65,7 +65,7 @@ export default function SignUp() {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
       await initializeUserData(uid);
-      router.replace("userinfo");
+      router.replace("/userinfo");
     } catch (e) {
       Alert.alert("SignUp Failed", e.message);
     } finally {

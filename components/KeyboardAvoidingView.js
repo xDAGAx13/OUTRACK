@@ -1,18 +1,16 @@
-import { View, Text, ScrollView } from "react-native";
-import React, { Children } from "react";
+import { KeyboardAvoidingView as RNKeyboardAvoidingView, ScrollView } from "react-native";
+import React from "react";
 import { Platform } from "react-native";
 
-export default function KeyboardAvoidingView() {
+export default function KeyboardAvoidingView({ children }) {
   return (
-    <KeyboardAvoidingView
+    <RNKeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {
-          Children
-        }
+        {children}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </RNKeyboardAvoidingView>
   );
 }

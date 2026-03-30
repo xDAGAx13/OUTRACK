@@ -6,7 +6,6 @@ import "../../global.css";
 import { collection, doc, getDoc, updateDoc } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import EditableField from "../../components/EditableField";
-import { getAuth } from "firebase/auth/cordova";
 import { auth } from "../../FirebaseConfig";
 
 export default function profile() {
@@ -43,7 +42,7 @@ export default function profile() {
       const docRef = doc(FIREBASE_DB, `users/${user.uid}/userinfo/profile`);
       await updateDoc(docRef, { [field]: fieldValues[field] });
       setUserinfo((prev) => ({ ...prev, [field]: fieldValues[field] }));
-      setEditingField[null];
+      setEditingField(null);
       Alert.alert("Profile updated");
     } catch (e) {
       console.error("Failed to update profile: ", e);
