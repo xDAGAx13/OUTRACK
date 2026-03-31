@@ -102,7 +102,7 @@ export default function History() {
     <View className="bg-neutral-900 border border-neutral-700 rounded-2xl p-4 mb-4">
       {/* Card Header */}
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-neutral-400 text-sm font-semibold uppercase tracking-widest">
+        <Text className="text-neutral-400 text-base font-semibold uppercase tracking-widest">
           🗓{" "}
           {new Date(item.createdAt).toLocaleDateString("en-US", {
             weekday: "short",
@@ -132,7 +132,7 @@ export default function History() {
             key={idx}
             className="bg-orange-500 rounded-full px-3 py-1 justify-center"
           >
-            <Text className="text-white font-semibold text-base">{group}</Text>
+            <Text className="text-white font-semibold text-lg">{group}</Text>
           </View>
         ))}
       </View>
@@ -142,24 +142,24 @@ export default function History() {
         <View className="mt-3 border-t border-neutral-700 pt-3">
           {/* AI Summary */}
           <View className="bg-neutral-800 rounded-xl px-3 py-2 mb-3 flex-row items-center gap-2">
-            <Text className="text-orange-400 text-xs">✦ AI</Text>
+            <Text className="text-orange-400 text-sm font-bold">✦ AI</Text>
             {summaryLoading[item.id] ? (
-              <Text className="text-neutral-500 text-sm italic">Summarising...</Text>
+              <Text className="text-neutral-500 text-base italic">Summarising...</Text>
             ) : (
-              <Text className="text-neutral-300 text-sm flex-1">{summaries[item.id] || '—'}</Text>
+              <Text className="text-neutral-300 text-base flex-1">{summaries[item.id] || '—'}</Text>
             )}
           </View>
 
           {item.exercises.map((exercise, idx) => (
             <View key={idx} className="mb-3">
-              <Text className="text-white font-semibold text-lg">
+              <Text className="text-white font-semibold text-xl">
                 {exercise.exercise}{" "}
-                <Text className="text-neutral-500 text-base font-normal">
+                <Text className="text-neutral-500 text-lg font-normal">
                   ({exercise.muscleGroup})
                 </Text>
               </Text>
               {exercise.sets.map((set, i) => (
-                <Text key={i} className="text-neutral-400 text-base mt-1">
+                <Text key={i} className="text-neutral-400 text-lg mt-1">
                   Set {i + 1}: {set.reps} reps @ {set.weight} kg
                 </Text>
               ))}
