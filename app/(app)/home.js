@@ -9,7 +9,7 @@ import {
   query,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView, RefreshControl, ActivityIndicator } from "react-native";
 import { auth, FIREBASE_DB } from "../../FirebaseConfig";
 import "../../global.css";
 import { greeting } from "../../utils/initializeUserData";
@@ -19,68 +19,73 @@ export default function home() {
   const [username, setUsername] = useState("");
   const [lastworkout, setLastworkout] = useState("");
   const [suggestion, setSuggestion] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const randomNum = Math.floor(Math.random()*5);
 
 
 
-  useEffect(() => {
+  const fetchData = async () => {
     const user = auth.currentUser;
     if (!user) return;
-    const fetchUserName = async () => {
-      try {
-        const userinfoSnap = await getDocs(
-          collection(FIREBASE_DB, `users/${user.uid}/userinfo`)
-        );
 
-        if (!userinfoSnap.empty) {
-          const userInfoDoc = userinfoSnap.docs[0];
-          const fullName = userInfoDoc.data().name;
-          const firstName = fullName.split(" ")[0];
-          setUsername(firstName);
-        }
-      } catch (e) {
-        console.error("Error fetching user name: ", e.message);
+    try {
+      const userinfoSnap = await getDocs(collection(FIREBASE_DB, `users/${user.uid}/userinfo`));
+      if (!userinfoSnap.empty) {
+        const fullName = userinfoSnap.docs[0].data().name;
+        setUsername(fullName.split(" ")[0]);
       }
-    };
+    } catch (e) {
+      console.error("Error fetching user name: ", e.message);
+    }
 
-    const fetchLastWorkout = async () => {
-      try {
-        const workoutRef = collection(FIREBASE_DB, `users/${user.uid}/workout`);
-        const workoutQuery = query(workoutRef, orderBy("createdAt", "desc"), limit(5));
-        const workoutSnap = await getDocs(workoutQuery);
+    try {
+      const workoutQuery = query(
+        collection(FIREBASE_DB, `users/${user.uid}/workout`),
+        orderBy("createdAt", "desc"),
+        limit(5)
+      );
+      const workoutSnap = await getDocs(workoutQuery);
+      if (!workoutSnap.empty) {
+        const latestWorkout = workoutSnap.docs[0].data();
+        const workoutDate = latestWorkout.createdAt?.toDate?.();
+        const formattedDate = workoutDate
+          ? workoutDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+          : "Unknown Date";
+        const muscleGroups = [...new Set(latestWorkout.exercises.map(ex => ex.muscleGroup))].join(", ");
+        setLastworkout(`${muscleGroups} — ${formattedDate}`);
 
-        if (!workoutSnap.empty) {
-          const latestWorkout = workoutSnap.docs[0].data();
-          const workoutDate = latestWorkout.createdAt?.toDate?.();
-          const formattedDate = workoutDate
-            ? workoutDate.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })
-            : "Unknown Date";
-
-          const muscleGroups = [
-            ...new Set(latestWorkout.exercises.map((ex) => ex.muscleGroup)),
-          ].join(", ");
-          setLastworkout(`${muscleGroups} — ${formattedDate}`);
-
-          const recentWorkouts = workoutSnap.docs.map(d => d.data());
-          const aiSuggestion = await getSuggestedMuscle(recentWorkouts);
-          if (aiSuggestion) setSuggestion(aiSuggestion);
-        }
-      } catch (e) {
-        console.error("Error fetching last workout: ", e.message);
+        const recentWorkouts = workoutSnap.docs.map(d => d.data());
+        const aiSuggestion = await getSuggestedMuscle(recentWorkouts);
+        if (aiSuggestion) setSuggestion(aiSuggestion);
       }
-    };
-    
-    fetchUserName();
-    fetchLastWorkout();
-  }, []);
+    } catch (e) {
+      console.error("Error fetching last workout: ", e.message);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setSuggestion("");
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   return (
-    <View className="bg-black flex-1 pb-32">
+    <ScrollView
+      className="bg-black flex-1"
+      contentContainerStyle={{ paddingBottom: 128 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />}
+    >
+      {/* Refresh indicator */}
+      {refreshing && (
+        <View className="items-center pt-4">
+          <ActivityIndicator color="#f97316" size="small" />
+        </View>
+      )}
+
       {/* TITLE AND GREETING */}
       <View className="pt-16 px-6 pb-6">
         <Text className="text-orange-500 text-6xl font-extrabold text-center tracking-widest mb-2">
@@ -131,6 +136,6 @@ export default function home() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }

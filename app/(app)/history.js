@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import "../../global.css";
@@ -19,53 +20,48 @@ import { getWorkoutSummary } from "../../utils/gemini";
 export default function History() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [workouts, setWorkouts] = useState([]);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(null);
   const [summaries, setSummaries] = useState({});
   const [summaryLoading, setSummaryLoading] = useState({});
 
-  const handleExpand = async (id, exercises) => {
-    const isExpanding = selectedWorkoutId !== id;
-    setSelectedWorkoutId(isExpanding ? id : null);
-    if (isExpanding && !summaries[id]) {
-      setSummaryLoading(prev => ({ ...prev, [id]: true }));
-      const summary = await getWorkoutSummary(exercises);
-      setSummaries(prev => ({ ...prev, [id]: summary }));
-      setSummaryLoading(prev => ({ ...prev, [id]: false }));
+  const handleExpand = (id) => {
+    setSelectedWorkoutId(selectedWorkoutId === id ? null : id);
+  };
+
+  const handleGenerateSummary = async (id, exercises) => {
+    setSummaryLoading(prev => ({ ...prev, [id]: true }));
+    const summary = await getWorkoutSummary(exercises);
+    setSummaries(prev => ({ ...prev, [id]: summary }));
+    setSummaryLoading(prev => ({ ...prev, [id]: false }));
+  };
+
+  const fetchWorkouts = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const snapshot = await getDocs(collection(FIREBASE_DB, `users/${user.uid}/workout`));
+      const logs = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return { id: doc.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(0) };
+      });
+      setWorkouts(logs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    } catch (e) {
+      console.log("Failed to set workouts: ", e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchWorkouts = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setSummaries({});
+    await fetchWorkouts();
+    setRefreshing(false);
+  };
 
-        const snapshot = await getDocs(
-          collection(FIREBASE_DB, `users/${user.uid}/workout`)
-        );
-
-        const logs = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.() || new Date(0), // fallback to epoch
-          };
-        });
-
-        const sortedLogs = logs.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        setWorkouts(sortedLogs);
-      } catch (e) {
-        console.log("Failed to set workouts: ", e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchWorkouts();
-  }, []);
+  useEffect(() => { fetchWorkouts(); }, []);
 
   const handleDeleteWorkout = (workoutId) => {
     Alert.alert(
@@ -110,7 +106,7 @@ export default function History() {
             day: "2-digit",
           })}
         </Text>
-        <TouchableOpacity onPress={() => handleExpand(item.id, item.exercises)}>
+        <TouchableOpacity onPress={() => handleExpand(item.id)}>
           <Ionicons
             name={
               selectedWorkoutId === item.id
@@ -141,14 +137,23 @@ export default function History() {
       {selectedWorkoutId === item.id && (
         <View className="mt-3 border-t border-neutral-700 pt-3">
           {/* AI Summary */}
-          <View className="bg-neutral-800 rounded-xl px-3 py-2 mb-3 flex-row items-center gap-2">
-            <Text className="text-orange-400 text-sm font-bold">✦ AI</Text>
-            {summaryLoading[item.id] ? (
-              <Text className="text-neutral-500 text-base italic">Summarising...</Text>
-            ) : (
-              <Text className="text-neutral-300 text-base flex-1">{summaries[item.id] || '—'}</Text>
-            )}
-          </View>
+          {summaries[item.id] ? (
+            <View className="bg-neutral-800 rounded-xl px-3 py-3 mb-3 flex-row items-start gap-2">
+              <Text className="text-orange-400 text-sm font-bold mt-0.5">✦ AI</Text>
+              <Text className="text-neutral-300 text-base flex-1">{summaries[item.id]}</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={() => handleGenerateSummary(item.id, item.exercises)}
+              disabled={summaryLoading[item.id]}
+              className="bg-neutral-800 border border-orange-500 rounded-xl px-3 py-2 mb-3 flex-row items-center gap-2 self-start"
+            >
+              <Text className="text-orange-400 text-sm font-bold">✦</Text>
+              <Text className="text-orange-400 text-sm font-semibold">
+                {summaryLoading[item.id] ? 'Generating...' : 'Generate AI Summary'}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {item.exercises.map((exercise, idx) => (
             <View key={idx} className="mb-3">
@@ -199,7 +204,17 @@ export default function History() {
   }
 
   return (
-    <ScrollView className="bg-black flex-1 px-4 pt-8 pb-32">
+    <ScrollView
+      className="bg-black flex-1 px-4 pt-8"
+      contentContainerStyle={{ paddingBottom: 128 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />}
+    >
+      {refreshing && (
+        <View className="items-center mb-4">
+          <ActivityIndicator color="#f97316" size="small" />
+        </View>
+      )}
+
       <Text className="text-white text-5xl font-bold text-center mb-6">
         Workout History
       </Text>
