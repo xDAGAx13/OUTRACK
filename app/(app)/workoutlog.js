@@ -8,14 +8,15 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import DropDownPicker from "react-native-dropdown-picker";
-import { getAuth } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import {  FIREBASE_DB } from "../../FirebaseConfig.js";
 import ExerciseBlock from "../../components/ExerciseBlock.js";
 import { logWorkout } from "../../components/workoutlogger.js";
 import { auth } from "../../FirebaseConfig.js";
+import { useLocalSearchParams } from "expo-router";
 
 export default function workoutlog() {
+  const { workoutId } = useLocalSearchParams();
   const [muscleOptions, setMuscleOptions] = useState([]);
   const [exerciseMap, setExerciseMap] = useState({});
   const [exerciseInputs, setExerciseInputs] = useState([
@@ -26,6 +27,7 @@ export default function workoutlog() {
       sets: [{ reps: "", weight: "" }],
     },
   ]);
+  const [reusedFrom, setReusedFrom] = useState(null);
 
 
   useEffect(() => {
@@ -73,8 +75,31 @@ export default function workoutlog() {
         console.error("Error fetching exercises:", err);
       }
     };
+    const fetchReusedWorkout = async () => {
+      if (!workoutId) return;
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        const snap = await getDoc(doc(FIREBASE_DB, `users/${user.uid}/workout/${workoutId}`));
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const preloaded = data.exercises.map((ex) => ({
+          id: Date.now().toString() + Math.random(),
+          muscleGroup: ex.muscleGroup || "",
+          exercise: ex.exercise || "",
+          sets: ex.sets?.map((s) => ({ reps: s.reps || "", weight: s.weight || "" })) || [{ reps: "", weight: "" }],
+        }));
+        setExerciseInputs(preloaded);
+        const date = data.createdAt?.toDate?.();
+        if (date) setReusedFrom(date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }));
+      } catch (err) {
+        console.error("Failed to load workout for reuse:", err.message);
+      }
+    };
+
     fetchMuscleGroups();
     fetchExercises();
+    fetchReusedWorkout();
   }, []);
 
   const updateInput = (id, key, value) => {
@@ -141,7 +166,12 @@ export default function workoutlog() {
           <Text className="text-white text-4xl text-center font-extrabold">
             Build Your Workout 💪
           </Text>
-
+          {reusedFrom && (
+            <View className="mt-3 bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2 flex-row items-center gap-2">
+              <Text className="text-green-400 text-sm">↺</Text>
+              <Text className="text-neutral-400 text-sm">Loaded from {reusedFrom} — add or modify below</Text>
+            </View>
+          )}
         </View>
 
         {exerciseInputs.map((block, index) => (

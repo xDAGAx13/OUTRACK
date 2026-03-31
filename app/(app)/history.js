@@ -190,6 +190,12 @@ export default function History() {
           {/* Actions */}
           <View className="flex-row gap-4 mt-2 justify-end">
             <TouchableOpacity
+              onPress={() => router.push(`/(app)/workoutlog?workoutId=${item.id}`)}
+              className="bg-neutral-800 p-2 rounded-xl"
+            >
+              <Ionicons name="refresh" size={20} color="#22c55e" />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() =>
                 router.push({
                   pathname: `/(app)/editWorkout?workoutId=${item.id}`,
