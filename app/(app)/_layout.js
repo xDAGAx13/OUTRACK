@@ -1,9 +1,20 @@
-import { View } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import "../../global.css";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
+
+const HapticTab = (props) => (
+  <TouchableOpacity
+    {...props}
+    onPress={(e) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      props.onPress?.(e);
+    }}
+  />
+);
 
 export default function AppLayout() {
   return (
@@ -29,33 +40,32 @@ export default function AppLayout() {
             ),
             tabBarStyle: {
               backgroundColor: '#080808',
-              height: 100,
-              borderTopLeftRadius:25,
-              borderTopRightRadius:25,
+              height: 75,
+              borderTopLeftRadius: 25,
+              borderTopRightRadius: 25,
               marginHorizontal: 9,
-              marginVertical:0,
+              marginVertical: 0,
               position: 'absolute',
-              elevation:60,
-              shadowColor:'#fff',
-              shadowOffset:{width:0, height:4},
-              shadowOpacity:0.6,
-              shadowRadius:15,
-              borderColor:'#fb923c',
-              borderWidth:3,
-              borderTopWidth:3,
-              borderBottomWidth:0,
+              elevation: 60,
+              shadowColor: '#fff',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              borderColor: '#fb923c',
+              borderWidth: 3,
+              borderTopWidth: 3,
+              borderBottomWidth: 0,
               flexDirection: 'row',
-              display:'flex',
-              
+              display: 'flex',
             },
             tabBarItemStyle: {
-              
-              display:'flex',
-              paddingVertical:10, 
+              display: 'flex',
+              paddingVertical: 5,
               justifyContent: "center",
               alignItems: "center",
             },
             tabBarShowLabel: false,
+            tabBarButton: HapticTab,
           }}
         >
           <Tabs.Screen

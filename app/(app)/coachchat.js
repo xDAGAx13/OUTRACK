@@ -174,7 +174,7 @@ export default function coachchat() {
         )}
 
         {/* Input Bar */}
-        <View className="flex-row items-center gap-3 px-4 pb-36 pt-2 border-t border-neutral-800">
+        <View className="flex-row items-center gap-3 px-4 pb-28 pt-2 border-t border-neutral-800">
           <TextInput
             value={input}
             onChangeText={setInput}
