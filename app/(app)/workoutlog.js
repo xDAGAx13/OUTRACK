@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -28,78 +29,70 @@ export default function workoutlog() {
     },
   ]);
   const [reusedFrom, setReusedFrom] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
 
-  useEffect(() => {
-    const fetchMuscleGroups = async () => {
+  const fetchAll = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const snapshotMuscle = await getDocs(
+        collection(FIREBASE_DB, `users/${user.uid}/muscleGroups`)
+      );
+      const options = snapshotMuscle.docs.map((d) => ({
+        label: d.data().name,
+        value: d.data().name,
+      }));
+      setMuscleOptions(options);
+    } catch (err) {
+      console.error("Failed to fetch Muscle Groups: ", err.message);
+    }
+
+    try {
+      const snapshot = await getDocs(
+        collection(FIREBASE_DB, `users/${user.uid}/exercises`)
+      );
+      const exercisesByGroup = {};
+      snapshot.docs.forEach((d) => {
+        const data = d.data();
+        if (!exercisesByGroup[data.muscleGroup]) exercisesByGroup[data.muscleGroup] = [];
+        exercisesByGroup[data.muscleGroup].push({ label: data.name, value: data.name });
+      });
+      setExerciseMap(exercisesByGroup);
+    } catch (err) {
+      console.error("Error fetching exercises:", err);
+    }
+
+    if (workoutId) {
       try {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const snapshotMuscle = await getDocs(
-          collection(FIREBASE_DB, `users/${user.uid}/muscleGroups`)
-        );
-        const options = snapshotMuscle.docs.map((doc) => ({
-          label: doc.data().name,
-          value: doc.data().name,
-        }));
-
-        setMuscleOptions(options);
-      } catch (err) {
-        console.error("Failed to fetch Muscle Groups: ", err.message);
-      }
-    };
-
-    const fetchExercises = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const snapshot = await getDocs(
-          collection(FIREBASE_DB, `users/${user.uid}/exercises`)
-        );
-        const exercisesByGroup = {};
-
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          if (!exercisesByGroup[data.muscleGroup]) {
-            exercisesByGroup[data.muscleGroup] = [];
-          }
-          exercisesByGroup[data.muscleGroup].push({
-            label: data.name,
-            value: data.name,
-          });
-        });
-        setExerciseMap(exercisesByGroup);
-      } catch (err) {
-        console.error("Error fetching exercises:", err);
-      }
-    };
-    const fetchReusedWorkout = async () => {
-      if (!workoutId) return;
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
         const snap = await getDoc(doc(FIREBASE_DB, `users/${user.uid}/workout/${workoutId}`));
-        if (!snap.exists()) return;
-        const data = snap.data();
-        const preloaded = data.exercises.map((ex) => ({
-          id: Date.now().toString() + Math.random(),
-          muscleGroup: ex.muscleGroup || "",
-          exercise: ex.exercise || "",
-          sets: ex.sets?.map((s) => ({ reps: s.reps || "", weight: s.weight || "" })) || [{ reps: "", weight: "" }],
-        }));
-        setExerciseInputs(preloaded);
-        const date = data.createdAt?.toDate?.();
-        if (date) setReusedFrom(date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }));
+        if (snap.exists()) {
+          const data = snap.data();
+          const preloaded = data.exercises.map((ex) => ({
+            id: Date.now().toString() + Math.random(),
+            muscleGroup: ex.muscleGroup || "",
+            exercise: ex.exercise || "",
+            sets: ex.sets?.map((s) => ({ reps: s.reps || "", weight: s.weight || "" })) || [{ reps: "", weight: "" }],
+          }));
+          setExerciseInputs(preloaded);
+          const date = data.createdAt?.toDate?.();
+          if (date) setReusedFrom(date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }));
+        }
       } catch (err) {
         console.error("Failed to load workout for reuse:", err.message);
       }
-    };
+    }
+  };
 
-    fetchMuscleGroups();
-    fetchExercises();
-    fetchReusedWorkout();
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAll();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchAll();
   }, []);
 
   const updateInput = (id, key, value) => {
@@ -158,7 +151,11 @@ export default function workoutlog() {
 
   return (
     <View className="flex-1 bg-black">
-      <ScrollView className="flex-1 bg-black px-4 pt-14" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        className="flex-1 bg-black px-4 pt-14"
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />}
+      >
         <View className="items-center mb-6">
           <Text className="text-orange-500 text-base font-semibold uppercase tracking-widest mb-2">
             ✦ Log Session
