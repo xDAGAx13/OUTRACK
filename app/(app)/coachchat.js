@@ -6,7 +6,7 @@ import {  FIREBASE_DB } from '../../FirebaseConfig';
 import { collection, doc, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../FirebaseConfig';
-import Constants from 'expo-constants'
+import { sendChatMessage } from '../../utils/gemini';
 
 
 
@@ -52,39 +52,21 @@ export default function coachchat() {
     fetchUser();
   },[])
 
-  const sendMessagetoGPT = async()=>{
-    if(!input.trim()) return;
+  const sendMessagetoGPT = async () => {
+    if (!input.trim()) return;
 
-    const userMessage = {role:'user', content:input};
-    setMessages(prev=>[...prev, userMessage]);
+    const userMessage = { role: 'user', content: input };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setLoading(true);
-    try{
-      const response = await fetch("https://api.openai.com/v1/chat/completions",{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization': `Bearer ${Constants.expoConfig.extra.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4.1',
-          messages:[
-            {role:'system', content:`You are a fitness coach designed to help people on their workout journey in the app "OUTRACK". Use the following user info and their workout history on OUTRACK: ${context}`},
-            ...messages,
-            userMessage
-          ]
-        })
-      });
-
-      const data = await response.json();
-      console.log('OpenAI RESPONSE: ', data);
-      const botreply = data.choices?.[0]?.message;
-      if(botreply) setMessages(prev=>[...prev, botreply]);
-
-    }catch(e){
-      console.error('GPT API error: ', e.message);
-    }finally{
+    setInput('');
+    try {
+      const reply = await sendChatMessage(updatedMessages, context);
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      console.error('Gemini chat error: ', e.message);
+    } finally {
       setLoading(false);
-      setInput('');
     }
   };
   return (

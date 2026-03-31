@@ -14,12 +14,26 @@ import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
+import { getWorkoutSummary } from "../../utils/gemini";
 
 export default function History() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(null);
+  const [summaries, setSummaries] = useState({});
+  const [summaryLoading, setSummaryLoading] = useState({});
+
+  const handleExpand = async (id, exercises) => {
+    const isExpanding = selectedWorkoutId !== id;
+    setSelectedWorkoutId(isExpanding ? id : null);
+    if (isExpanding && !summaries[id]) {
+      setSummaryLoading(prev => ({ ...prev, [id]: true }));
+      const summary = await getWorkoutSummary(exercises);
+      setSummaries(prev => ({ ...prev, [id]: summary }));
+      setSummaryLoading(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
   useEffect(() => {
     const fetchWorkouts = async () => {
@@ -96,11 +110,7 @@ export default function History() {
             day: "2-digit",
           })}
         </Text>
-        <TouchableOpacity
-          onPress={() =>
-            setSelectedWorkoutId(selectedWorkoutId === item.id ? null : item.id)
-          }
-        >
+        <TouchableOpacity onPress={() => handleExpand(item.id, item.exercises)}>
           <Ionicons
             name={
               selectedWorkoutId === item.id
@@ -130,6 +140,16 @@ export default function History() {
       {/* Expanded Details */}
       {selectedWorkoutId === item.id && (
         <View className="mt-3 border-t border-neutral-700 pt-3">
+          {/* AI Summary */}
+          <View className="bg-neutral-800 rounded-xl px-3 py-2 mb-3 flex-row items-center gap-2">
+            <Text className="text-orange-400 text-xs">✦ AI</Text>
+            {summaryLoading[item.id] ? (
+              <Text className="text-neutral-500 text-sm italic">Summarising...</Text>
+            ) : (
+              <Text className="text-neutral-300 text-sm flex-1">{summaries[item.id] || '—'}</Text>
+            )}
+          </View>
+
           {item.exercises.map((exercise, idx) => (
             <View key={idx} className="mb-3">
               <Text className="text-white font-semibold text-lg">

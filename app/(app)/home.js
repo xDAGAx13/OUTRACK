@@ -13,10 +13,12 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { auth, FIREBASE_DB } from "../../FirebaseConfig";
 import "../../global.css";
 import { greeting } from "../../utils/initializeUserData";
+import { getSuggestedMuscle } from "../../utils/gemini";
 
 export default function home() {
   const [username, setUsername] = useState("");
   const [lastworkout, setLastworkout] = useState("");
+  const [suggestion, setSuggestion] = useState("");
   const router = useRouter();
   const randomNum = Math.floor(Math.random()*5);
 
@@ -45,11 +47,7 @@ export default function home() {
     const fetchLastWorkout = async () => {
       try {
         const workoutRef = collection(FIREBASE_DB, `users/${user.uid}/workout`);
-        const workoutQuery = query(
-          workoutRef,
-          orderBy("createdAt", "desc"),
-          limit(1)
-        );
+        const workoutQuery = query(workoutRef, orderBy("createdAt", "desc"), limit(5));
         const workoutSnap = await getDocs(workoutQuery);
 
         if (!workoutSnap.empty) {
@@ -66,7 +64,11 @@ export default function home() {
           const muscleGroups = [
             ...new Set(latestWorkout.exercises.map((ex) => ex.muscleGroup)),
           ].join(", ");
-          setLastworkout(`Last Workout: ${muscleGroups} (${formattedDate})`);
+          setLastworkout(`${muscleGroups} — ${formattedDate}`);
+
+          const recentWorkouts = workoutSnap.docs.map(d => d.data());
+          const aiSuggestion = await getSuggestedMuscle(recentWorkouts);
+          if (aiSuggestion) setSuggestion(aiSuggestion);
         }
       } catch (e) {
         console.error("Error fetching last workout: ", e.message);
@@ -107,8 +109,18 @@ export default function home() {
         </TouchableOpacity>
       </View>
 
+      {/* AI Suggestion */}
+      {suggestion ? (
+        <View className="mx-4 mb-4">
+          <View className="bg-neutral-900 border border-orange-500 px-5 py-4 rounded-2xl flex-row gap-3 items-center">
+            <Text className="text-orange-400 text-base">✦</Text>
+            <Text className="text-neutral-300 text-lg flex-1">{suggestion}</Text>
+          </View>
+        </View>
+      ) : null}
+
       {/* CTA Button */}
-      <View className="mx-4 mt-8">
+      <View className="mx-4 mt-4">
         <TouchableOpacity
           className="bg-orange-500 rounded-2xl py-6"
           onPress={() => router.replace("/(app)/workoutlog")}

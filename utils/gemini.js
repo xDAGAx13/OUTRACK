@@ -1,0 +1,73 @@
+import { GoogleGenAI } from '@google/genai';
+import Constants from 'expo-constants';
+
+const getClient = () => new GoogleGenAI({
+  apiKey: Constants.expoConfig.extra.GEMINI_API_KEY,
+});
+
+export const getWorkoutSummary = async (exercises) => {
+  try {
+    const ai = getClient();
+    const exerciseList = exercises
+      .map(e => `${e.exercise} (${e.muscleGroup}): ${e.sets.map(s => `${s.reps} reps @ ${s.weight}kg`).join(', ')}`)
+      .join('\n');
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `You are a fitness coach. Summarize this workout in ONE short punchy sentence (max 12 words). Be specific and motivating:\n${exerciseList}`,
+    });
+
+    return response.text.trim();
+  } catch (e) {
+    console.error('Gemini summary error:', e);
+    return null;
+  }
+};
+
+export const getSuggestedMuscle = async (recentWorkouts) => {
+  try {
+    const ai = getClient();
+    const history = recentWorkouts.slice(0, 5).map((w, i) => {
+      const muscles = [...new Set(w.exercises.map(e => e.muscleGroup))].join(', ');
+      return `Workout ${i + 1}: ${muscles}`;
+    }).join('\n');
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `You are a fitness coach. Based on this recent workout history:\n${history}\n\nSuggest ONE muscle group to train next in ONE short sentence. Try to use Gen-z Lingo. No asterisks or formatting.`,
+    });
+
+    return response.text.trim();
+  } catch (e) {
+    console.error('Gemini suggestion error:', e);
+    return null;
+  }
+};
+
+export const sendChatMessage = async (messages, context) => {
+  try {
+    const ai = getClient();
+
+    const contents = [
+      {
+        role: 'user',
+        parts: [{ text: `You are a fitness coach for the app OUTRACK. Use this user data as context:\n${context}\n\nNow respond to the user's messages.` }],
+      },
+      { role: 'model', parts: [{ text: 'Got it! I\'m ready to help as your personal fitness coach.' }] },
+      ...messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      })),
+    ];
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents,
+    });
+
+    return response.text.trim();
+  } catch (e) {
+    console.error('Gemini chat error:', e);
+    throw e;
+  }
+};
