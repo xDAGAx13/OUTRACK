@@ -11,7 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import "../../global.css";
 import {  FIREBASE_DB } from "../../FirebaseConfig";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
@@ -33,7 +33,17 @@ export default function History() {
   const handleGenerateSummary = async (id, exercises) => {
     setSummaryLoading(prev => ({ ...prev, [id]: true }));
     const summary = await getWorkoutSummary(exercises);
-    setSummaries(prev => ({ ...prev, [id]: summary }));
+    if (summary) {
+      setSummaries(prev => ({ ...prev, [id]: summary }));
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          await updateDoc(doc(FIREBASE_DB, `users/${user.uid}/workout/${id}`), { summary });
+        }
+      } catch (e) {
+        console.error('Failed to save summary to Firestore:', e.message);
+      }
+    }
     setSummaryLoading(prev => ({ ...prev, [id]: false }));
   };
 
@@ -42,11 +52,17 @@ export default function History() {
       const user = auth.currentUser;
       if (!user) return;
       const snapshot = await getDocs(collection(FIREBASE_DB, `users/${user.uid}/workout`));
-      const logs = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return { id: doc.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(0) };
+      const logs = snapshot.docs.map((d) => {
+        const data = d.data();
+        return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(0) };
       });
-      setWorkouts(logs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      const sorted = logs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setWorkouts(sorted);
+
+      // Seed summaries state from any already saved in Firestore
+      const existing = {};
+      sorted.forEach(w => { if (w.summary) existing[w.id] = w.summary; });
+      setSummaries(existing);
     } catch (e) {
       console.log("Failed to set workouts: ", e.message);
     } finally {

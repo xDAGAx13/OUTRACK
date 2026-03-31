@@ -13,8 +13,8 @@ export const getWorkoutSummary = async (exercises) => {
       .join('\n');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `You are a fitness coach. Summarize this workout in ONE short punchy sentence (max 12 words). Be specific and motivating:\n${exerciseList}`,
+      model: 'gemini-2.0-flash-lite',
+      contents: `You are a fitness coach. Summarize this workout in ONE short punchy sentence (max 12 words). Be specific and motivating:\n${exerciseList} and do not use Asterisks`,
     });
 
     return response.text.trim();
@@ -33,7 +33,7 @@ export const getSuggestedMuscle = async (recentWorkouts) => {
     }).join('\n');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash-lite',
       contents: `You are a fitness coach. Based on this recent workout history:\n${history}\n\nSuggest ONE muscle group to train next in ONE short sentence. Try to use Gen-z Lingo. No asterisks or formatting.`,
     });
 
@@ -61,7 +61,7 @@ export const sendChatMessage = async (messages, context) => {
     ];
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash-lite',
       contents,
     });
 
