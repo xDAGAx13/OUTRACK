@@ -134,12 +134,15 @@ export default function workoutlog() {
   return (
     <View className="flex-1 bg-black">
       <ScrollView className="flex-1 bg-black px-4 pt-14" contentContainerStyle={{ paddingBottom: 120 }}>
-        <Text className="text-orange-500 text-xs font-semibold uppercase tracking-widest text-center mb-1">
-          Log Session
-        </Text>
-        <Text className="text-white text-3xl text-center font-bold mb-6">
-          Build Your Workout 💪
-        </Text>
+        <View className="items-center mb-6">
+          <Text className="text-orange-500 text-base font-semibold uppercase tracking-widest mb-2">
+            ✦ Log Session
+          </Text>
+          <Text className="text-white text-4xl text-center font-extrabold">
+            Build Your Workout 💪
+          </Text>
+
+        </View>
 
         {exerciseInputs.map((block, index) => (
           <ExerciseBlock

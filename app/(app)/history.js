@@ -231,9 +231,17 @@ export default function History() {
         </View>
       )}
 
-      <Text className="text-white text-5xl font-bold text-center mb-6">
-        Workout History
-      </Text>
+      <View className="items-center mb-6">
+        <Text className="text-orange-500 text-base font-semibold uppercase tracking-widest mb-2">
+          ✦ Your Logs
+        </Text>
+        <Text className="text-white text-4xl font-extrabold text-center">
+          Workout History
+        </Text>
+        <Text className="text-neutral-400 text-xl mt-2">
+          {workouts.length} {workouts.length === 1 ? 'session' : 'sessions'} logged
+        </Text>
+      </View>
 
       <FlatList
         data={workouts}
