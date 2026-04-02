@@ -2,7 +2,6 @@ import {
   View,
   Text,
   Alert,
-  Image,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -14,7 +13,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, getAuth, getRedirectResult, signInWithCredential, signInWithRedirect } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithCredential } from "firebase/auth";
 import { initializeUserData } from "../utils/initializeUserData";
 import { Ionicons } from "@expo/vector-icons";
 import { GoogleAuthProvider } from "firebase/auth";
@@ -28,37 +27,25 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-
-  const[request, response, promptAsync]=Google.useAuthRequest({
+  const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: '335688520458-m9a7a7uo7f4qki0ml04064qoo61ckikn.apps.googleusercontent.com',
-    iosClientId:'335688520458-u3fgqf2eupt3tvkihco1ioupqcirge1h.apps.googleusercontent.com',
-    webClientId:'335688520458-m9a7a7uo7f4qki0ml04064qoo61ckikn.apps.googleusercontent.com',
-  })
-  useEffect(()=>{
-    if(response?.type==='success'){
-      const {id_token} = response.authentication;
+    iosClientId: '335688520458-u3fgqf2eupt3tvkihco1ioupqcirge1h.apps.googleusercontent.com',
+    webClientId: '335688520458-m9a7a7uo7f4qki0ml04064qoo61ckikn.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.authentication;
       const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential)
-      .then((cred)=>{
-        console.log('Google Sign In Success: ', cred.user);
-      }).catch((e)=>{
-        console.error('Firebase sign-in error: ',e)
-      })
+        .then((cred) => {
+          console.log('Google Sign In Success: ', cred.user);
+        }).catch((e) => {
+          console.error('Firebase sign-in error: ', e);
+        });
     }
-  },[response])
-  // Authenticating using Google Auth Provider
-  
-  const handleGoogleSignUp = async ()=>{
-    try{
-      const provider = new GoogleAuthProvider();
-      signInWithRedirect(auth, provider);
-    }catch(e){
-      console.error('Error signing in w Google: ',e)
-    }
-  }
+  }, [response]);
 
-
-  //LoginCheck function
   const handleSignUp = async () => {
     setLoading(true);
     try {
@@ -71,8 +58,6 @@ export default function SignUp() {
     } finally {
       setLoading(false);
     }
-
-
   };
 
   return (
@@ -81,78 +66,86 @@ export default function SignUp() {
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="pt-10">
-          {/* TITLE OF THE APP */}
-          <View className="pt-24 flex-col">
-            <Text className="text-white text-center text-7xl font-extrabold ">
+        <View className="flex-1 pt-10">
+          {/* TITLE */}
+          <View className="pt-16 flex-col">
+            <Text className="text-white text-center text-7xl font-extrabold">
               OUTRACK
             </Text>
             <Text className="text-white text-center text-5xl font-semibold mt-4">
-              SIGNUP
+              SIGN UP
             </Text>
           </View>
-          {/* IMAGE */}
 
-          {/* Auth Inputs */}
-          <View className="flex-col gap-4 pt-7">
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              className="placeholder:text-gray-500 bg-white h-16 px-7 text-2xl rounded-2xl mx-7 focus:border-gray-300 border-2"
-              placeholder="Email"
-            />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              className=" placeholder:text-gray-500  bg-white h-16 text-2xl rounded-2xl mx-7 px-7"
-              placeholder="Password"
-              secureTextEntry
-            />
-          </View>
+          {/* Center block: inputs + buttons */}
+          <View className="flex-1 mt-24 px-5 gap-4">
+            {/* Auth Inputs */}
+            <View className="flex-col gap-4">
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                className="bg-neutral-800 h-14 px-5 text-white text-lg rounded-xl border border-neutral-600"
+                placeholder="Email"
+                placeholderTextColor="#D3D3D3"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                textAlignVertical="center"
+              />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                className="bg-neutral-800 h-14 px-5 text-white text-lg rounded-xl border border-neutral-600"
+                placeholder="Password"
+                placeholderTextColor="#D3D3D3"
+                secureTextEntry
+                textAlignVertical="center"
+              />
+            </View>
 
-          {/* LOGIN BUTTON */}
-          <View className="pt-5 flex-col">
-            {loading ? (
-              <ActivityIndicator size="large" />
-            ) : (
-              <View className="gap-3">
+            {/* Buttons */}
+            <View className="flex-col gap-3 mt-10">
+              {loading ? (
+                <ActivityIndicator size="large" color="#f97316" />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    className="h-14 bg-orange-500 rounded-xl justify-center"
+                    onPress={handleSignUp}
+                  >
+                    <Text className="text-white text-center text-xl font-bold">
+                      Sign Up
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    className="h-14 bg-neutral-800 rounded-xl justify-center border border-neutral-600"
+                    onPress={() => promptAsync()}
+                  >
+                    <View className="flex-row items-center justify-center gap-3">
+                      <Ionicons name="logo-google" size={22} color="white" />
+                      <Text className="text-white text-center text-lg font-semibold">
+                        Continue with Google
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </>
+              )}
+
               <TouchableOpacity
-                className="h-16 bg-gray-500 rounded-3xl justify-center mx-14"
-                onPress={handleSignUp}
+                activeOpacity={0.5}
+                onPress={() => router.push("/login")}
               >
-                <Text className="text-white text-center text-3xl font-semibold">
-                  Sign Up
+                <Text className="text-white pt-2 text-center text-lg">
+                  Already have an account?
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-              className=" bg-gray-200 rounded-3xl justify-center h-20 mt-3"
-              onPress={()=>promptAsync()}
-            >
-              <View className="flex-row gap-5">
-              <Ionicons name="logo-google" className="h-10 w-20 px-9" size={35}/>
-              <Text className="text-black text-center text-3xl font-semibold ">
-                Continue with Google
-              </Text>
-              </View>
-            </TouchableOpacity>
             </View>
-              
-            )}
-
-            <TouchableOpacity
-              activeOpacity={0.5}
-              onPress={() => router.push("/login")}
-            >
-              <Text className="text-white pt-4 text-center text-xl">
-                Go back To login
-              </Text>
-            </TouchableOpacity>
           </View>
-          <View className="flex-1"></View>
 
-          <View >
-            <Text className="text-gray-200 text-center pt-16">
-              Terms and Conditions may apply..
+          {/* Terms pinned to bottom */}
+          <View className="pb-8">
+            <Text className="text-gray-600 text-center text-sm">
+              Terms and Conditions may apply
             </Text>
           </View>
         </View>
