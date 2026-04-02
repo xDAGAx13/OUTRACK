@@ -16,6 +16,32 @@ import { collection, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../FirebaseConfig';
 import { sendChatMessage } from '../../utils/gemini';
+import { useRouter } from 'expo-router';
+
+const renderBoldText = (text, baseStyle) => {
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return (
+    <Text style={baseStyle}>
+      {parts.map((part, i) =>
+        i % 2 === 1
+          ? <Text key={i} style={{ fontWeight: 'bold' }}>{part}</Text>
+          : part
+      )}
+    </Text>
+  );
+};
+
+const parseWorkoutFromReply = (text) => {
+  const tag = 'WORKOUT_JSON:';
+  const idx = text.indexOf(tag);
+  if (idx === -1) return { display: text, workout: null };
+  try {
+    const json = JSON.parse(text.slice(idx + tag.length).trim());
+    return { display: text.slice(0, idx).trim(), workout: json };
+  } catch {
+    return { display: text.slice(0, idx).trim(), workout: null };
+  }
+};
 
 const QUICK_PROMPTS = [
   'Plan my next workout',
@@ -31,6 +57,7 @@ export default function coachchat() {
   const [context, setContext] = useState('');
   const [contextReady, setContextReady] = useState(false);
   const scrollRef = useRef(null);
+  const router = useRouter();
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -53,19 +80,8 @@ export default function coachchat() {
         setContext(ctx);
         setContextReady(true);
 
-        // Auto-greeting
-        setLoading(true);
-        try {
-          const greeting = await sendChatMessage(
-            [{ role: 'user', content: 'Give me a short personalized greeting based on my profile and recent workouts. Max 2 sentences. No asterisks.' }],
-            ctx
-          );
-          setMessages([{ role: 'assistant', content: greeting }]);
-        } catch (e) {
-          setMessages([{ role: 'assistant', content: "Hey! I'm your AI coach. Ask me anything about your training." }]);
-        } finally {
-          setLoading(false);
-        }
+        const firstName = profile.name ? profile.name.split(' ')[0] : 'there';
+        setMessages([{ role: 'assistant', content: `Hi ${firstName}, how'd you wanna lock in today?`, workout: null }]);
       } catch (e) {
         console.error('Error fetching data: ', e.message);
       }
@@ -84,8 +100,9 @@ export default function coachchat() {
     setInput('');
 
     try {
-      const reply = await sendChatMessage(updatedMessages, context);
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      const raw = await sendChatMessage(updatedMessages, context);
+      const { display, workout } = parseWorkoutFromReply(raw);
+      setMessages((prev) => [...prev, { role: 'assistant', content: display, workout }]);
     } catch (e) {
       console.error('Gemini chat error: ', e.message);
     } finally {
@@ -137,10 +154,17 @@ export default function coachchat() {
                     : 'bg-neutral-900 border border-neutral-700 rounded-tl-sm'
                 }`}
               >
-                <Text className={`text-base leading-relaxed ${msg.role === 'user' ? 'text-white' : 'text-neutral-200'}`}>
-                  {msg.content}
-                </Text>
+                {renderBoldText(msg.content, { fontSize: 15, lineHeight: 22, color: msg.role === 'user' ? '#fff' : '#e5e5e5' })}
               </View>
+              {msg.workout && (
+                <TouchableOpacity
+                  className="mt-2 bg-orange-500 rounded-xl px-4 py-2 flex-row items-center gap-2"
+                  onPress={() => router.push({ pathname: '/(app)/workoutlog', params: { suggestedWorkout: JSON.stringify(msg.workout) } })}
+                >
+                  <Ionicons name="barbell-outline" size={15} color="#fff" />
+                  <Text className="text-white text-sm font-semibold">Load in Build My Workout</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
 

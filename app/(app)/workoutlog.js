@@ -17,7 +17,7 @@ import { auth } from "../../FirebaseConfig.js";
 import { useLocalSearchParams } from "expo-router";
 
 export default function workoutlog() {
-  const { workoutId } = useLocalSearchParams();
+  const { workoutId, suggestedWorkout } = useLocalSearchParams();
   const [muscleOptions, setMuscleOptions] = useState([]);
   const [exerciseMap, setExerciseMap] = useState({});
   const [exerciseInputs, setExerciseInputs] = useState([
@@ -81,6 +81,22 @@ export default function workoutlog() {
         }
       } catch (err) {
         console.error("Failed to load workout for reuse:", err.message);
+      }
+    }
+
+    if (suggestedWorkout) {
+      try {
+        const parsed = JSON.parse(suggestedWorkout);
+        const preloaded = parsed.exercises.map((ex) => ({
+          id: Date.now().toString() + Math.random(),
+          muscleGroup: ex.muscleGroup || "",
+          exercise: ex.exercise || "",
+          sets: ex.sets?.map((s) => ({ reps: s.reps || "", weight: s.weight || "" })) || [{ reps: "", weight: "" }],
+        }));
+        setExerciseInputs(preloaded);
+        setReusedFrom("OutChat");
+      } catch (err) {
+        console.error("Failed to load suggested workout:", err.message);
       }
     }
   };
@@ -165,8 +181,12 @@ export default function workoutlog() {
           </Text>
           {reusedFrom && (
             <View className="mt-3 bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2 flex-row items-center gap-2">
-              <Text className="text-green-400 text-sm">↺</Text>
-              <Text className="text-neutral-400 text-sm">Loaded from {reusedFrom} — add or modify below</Text>
+              <Text className={`text-sm ${reusedFrom === "OutChat" ? "text-orange-400" : "text-green-400"}`}>
+                {reusedFrom === "OutChat" ? "✦" : "↺"}
+              </Text>
+              <Text className="text-neutral-400 text-sm">
+                {reusedFrom === "OutChat" ? "Suggested by OutChat — adjust as needed" : `Loaded from ${reusedFrom} — add or modify below`}
+              </Text>
             </View>
           )}
         </View>
@@ -199,6 +219,8 @@ export default function workoutlog() {
           onPress={async () => {
             const result = await logWorkout(exerciseInputs);
             if (result.success) {
+              setExerciseInputs([{ id: Date.now().toString(), muscleGroup: "", exercise: "", sets: [{ reps: "", weight: "" }] }]);
+              setReusedFrom(null);
               Alert.alert("Workout Logged Successfully!");
             } else {
               Alert.alert("Failed to log workout: " + result.message);
