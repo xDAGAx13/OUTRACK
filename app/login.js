@@ -63,26 +63,32 @@ export default function login() {
           </View>
 
           {/* Auth Inputs */}
-          <View className="flex-col gap-4 pt-7">
+          <View className="flex-col gap-4 pt-7 px-5">
             <TextInput
               value={email}
               onChangeText={setEmail}
-              className="placeholder:text-gray-500 bg-white h-16 px-7 text-2xl rounded-2xl mx-7 focus:border-gray-300 border-2"
+              className="bg-neutral-800 h-14 px-5 text-white text-lg rounded-xl border border-neutral-600"
               placeholder="Email"
+              placeholderTextColor="#555"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              textAlignVertical="center"
             />
             <TextInput
               value={password}
               onChangeText={setPassword}
-              className=" placeholder:text-gray-500  bg-white h-16 text-2xl rounded-2xl mx-7 px-7"
+              className="bg-neutral-800 h-14 px-5 text-white text-lg rounded-xl border border-neutral-600"
               placeholder="Password"
+              placeholderTextColor="#555"
               secureTextEntry
+              textAlignVertical="center"
             />
           </View>
 
           {/* LOGIN BUTTON */}
-          <View className="pt-5 flex-col">
+          <View className="pt-5 flex-col px-5">
             <TouchableOpacity
-              className="h-16 bg-gray-500 rounded-3xl justify-center mx-14"
+              className="h-14 bg-orange-500 rounded-xl justify-center"
               onPress={handleLogin}
             >
               <Text className="text-white text-center text-3xl font-semibold">
