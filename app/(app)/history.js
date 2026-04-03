@@ -2,7 +2,6 @@ import {
   View,
   Text,
   ActivityIndicator,
-  ScrollView,
   FlatList,
   TouchableOpacity,
   Alert,
@@ -11,17 +10,22 @@ import {
 import React, { useEffect, useState } from "react";
 import "../../global.css";
 import {  FIREBASE_DB } from "../../FirebaseConfig";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy, limit, startAfter } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
 import { getWorkoutSummary } from "../../utils/gemini";
 
+const PAGE_SIZE = 8;
+
 export default function History() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [workouts, setWorkouts] = useState([]);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(null);
   const [summaries, setSummaries] = useState({});
   const [summaryLoading, setSummaryLoading] = useState({});
@@ -47,22 +51,35 @@ export default function History() {
     setSummaryLoading(prev => ({ ...prev, [id]: false }));
   };
 
-  const fetchWorkouts = async () => {
+  const fetchWorkouts = async (cursor = null) => {
     try {
       const user = auth.currentUser;
       if (!user) return;
-      const snapshot = await getDocs(collection(FIREBASE_DB, `users/${user.uid}/workout`));
+
+      const ref = collection(FIREBASE_DB, `users/${user.uid}/workout`);
+      const q = cursor
+        ? query(ref, orderBy('createdAt', 'desc'), startAfter(cursor), limit(PAGE_SIZE))
+        : query(ref, orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
+
+      const snapshot = await getDocs(q);
       const logs = snapshot.docs.map((d) => {
         const data = d.data();
         return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(0) };
       });
-      const sorted = logs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setWorkouts(sorted);
 
-      // Seed summaries state from any already saved in Firestore
       const existing = {};
-      sorted.forEach(w => { if (w.summary) existing[w.id] = w.summary; });
-      setSummaries(existing);
+      logs.forEach(w => { if (w.summary) existing[w.id] = w.summary; });
+
+      if (cursor) {
+        setWorkouts(prev => [...prev, ...logs]);
+        setSummaries(prev => ({ ...prev, ...existing }));
+      } else {
+        setWorkouts(logs);
+        setSummaries(existing);
+      }
+
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
     } catch (e) {
       console.log("Failed to set workouts: ", e.message);
     } finally {
@@ -70,9 +87,17 @@ export default function History() {
     }
   };
 
+  const fetchMore = async () => {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    await fetchWorkouts(lastDoc);
+    setLoadingMore(false);
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    setSummaries({});
+    setLastDoc(null);
+    setHasMore(true);
     await fetchWorkouts();
     setRefreshing(false);
   };
@@ -226,35 +251,36 @@ export default function History() {
   }
 
   return (
-    <ScrollView
-      className="bg-black flex-1 px-4 pt-8"
-      contentContainerStyle={{ paddingBottom: 128 }}
+    <FlatList
+      className="bg-black flex-1 px-4"
+      contentContainerStyle={{ paddingBottom: 128, paddingTop: 32 }}
+      data={workouts}
+      keyExtractor={(item) => item.id}
+      renderItem={renderWorkout}
+      onEndReached={fetchMore}
+      onEndReachedThreshold={0.4}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#f97316" />}
-    >
-      {refreshing && (
-        <View className="items-center mb-4">
-          <ActivityIndicator color="#f97316" size="small" />
+      ListHeaderComponent={
+        <View className="items-center mb-6">
+          <Text className="text-orange-500 text-base font-semibold uppercase tracking-widest mb-2">
+            ✦ Your Logs
+          </Text>
+          <Text className="text-white text-4xl font-extrabold text-center">
+            Workout History
+          </Text>
+          <Text className="text-neutral-400 text-xl mt-2">
+            {workouts.length} {workouts.length === 1 ? 'session' : 'sessions'} logged
+          </Text>
         </View>
-      )}
-
-      <View className="items-center mb-6">
-        <Text className="text-orange-500 text-base font-semibold uppercase tracking-widest mb-2">
-          ✦ Your Logs
-        </Text>
-        <Text className="text-white text-4xl font-extrabold text-center">
-          Workout History
-        </Text>
-        <Text className="text-neutral-400 text-xl mt-2">
-          {workouts.length} {workouts.length === 1 ? 'session' : 'sessions'} logged
-        </Text>
-      </View>
-
-      <FlatList
-        data={workouts}
-        keyExtractor={(item) => item.id}
-        renderItem={renderWorkout}
-        scrollEnabled={false}
-      />
-    </ScrollView>
+      }
+      ListFooterComponent={
+        loadingMore ? <ActivityIndicator color="#f97316" size="small" style={{ marginVertical: 16 }} /> : null
+      }
+      ListEmptyComponent={
+        !loading ? (
+          <Text className="text-neutral-500 text-center mt-10">No workouts logged yet.</Text>
+        ) : null
+      }
+    />
   );
 }
