@@ -67,16 +67,22 @@ export default function UserInfo() {
   const validateStep = () => {
     if (step === 1) {
       if (!form.name.trim()) { Alert.alert("Missing field", "Please enter your name."); return false; }
-      if (!form.age.trim()) { Alert.alert("Missing field", "Please enter your age."); return false; }
+      const age = Number(form.age);
+      if (!form.age.trim() || isNaN(age) || age < 10 || age > 100) { Alert.alert("Invalid age", "Please enter a valid age between 10 and 100."); return false; }
     }
     if (step === 2) {
-      if (!form.height.trim()) { Alert.alert("Missing field", "Please enter your height."); return false; }
-      if (!form.weight.trim()) { Alert.alert("Missing field", "Please enter your weight."); return false; }
+      const height = Number(form.height);
+      const weight = Number(form.weight);
+      const bodyFat = Number(form.bodyFat);
+      if (!form.height.trim() || isNaN(height) || height < 50 || height > 280) { Alert.alert("Invalid height", "Please enter a valid height in cm (50–280)."); return false; }
+      if (!form.weight.trim() || isNaN(weight) || weight < 20 || weight > 300) { Alert.alert("Invalid weight", "Please enter a valid weight in kg (20–300)."); return false; }
+      if (form.bodyFat.trim() && (isNaN(bodyFat) || bodyFat < 1 || bodyFat > 70)) { Alert.alert("Invalid body fat", "Body fat % must be between 1 and 70."); return false; }
     }
     if (step === 3) {
+      const freq = Number(form.frequency);
       if (!form.experience) { Alert.alert("Missing field", "Please select your gym experience."); return false; }
       if (!form.gymAccess) { Alert.alert("Missing field", "Please select your gym access."); return false; }
-      if (!form.frequency.trim()) { Alert.alert("Missing field", "Please enter your gym frequency."); return false; }
+      if (!form.frequency.trim() || isNaN(freq) || freq < 1 || freq > 7) { Alert.alert("Invalid frequency", "Gym frequency must be between 1 and 7 days."); return false; }
     }
     return true;
   };

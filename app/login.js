@@ -22,17 +22,20 @@ export default function login() {
 
   //LoginCheck function
   const handleLogin = async () => {
+    if (!email.trim() || !password) return;
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      console.log("Login Successful", userCredential.user);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
       router.replace("/(app)/home");
     } catch (e) {
-      Alert.alert("Login Failed", e.message);
+      const code = e.code;
+      if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        Alert.alert("Login Failed", "Invalid email or password.");
+      } else if (code === "auth/too-many-requests") {
+        Alert.alert("Too many attempts", "Account temporarily locked. Try again later.");
+      } else {
+        Alert.alert("Login Failed", "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

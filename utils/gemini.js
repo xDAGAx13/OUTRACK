@@ -5,6 +5,12 @@ const getClient = () => new GoogleGenAI({
   apiKey: Constants.expoConfig.extra.GEMINI_API_KEY,
 });
 
+const withTimeout = (promise, ms = 15000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms)),
+  ]);
+
 export const getWorkoutSummary = async (exercises) => {
   try {
     const ai = getClient();
@@ -12,10 +18,10 @@ export const getWorkoutSummary = async (exercises) => {
       .map(e => `${e.exercise} (${e.muscleGroup}): ${e.sets.map(s => `${s.reps} reps @ ${s.weight}kg`).join(', ')}`)
       .join('\n');
 
-    const response = await ai.models.generateContent({
+    const response = await withTimeout(ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `You are a fitness coach. Summarize this workout in ONE short punchy sentence (max 12 words). Be specific and motivating:\n${exerciseList} and do not use Asterisks`,
-    });
+    }));
 
     return response.text.trim();
   } catch (e) {
@@ -32,10 +38,10 @@ export const getSuggestedMuscle = async (recentWorkouts) => {
       return `Workout ${i + 1}: ${muscles}`;
     }).join('\n');
 
-    const response = await ai.models.generateContent({
+    const response = await withTimeout(ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `You are a fitness coach. Based on this recent workout history:\n${history}\n\nSuggest ONE muscle group to train next in ONE short sentence. Try to use Gen-z Lingo. No asterisks or formatting.`,
-    });
+    }));
 
     return response.text.trim();
   } catch (e) {
@@ -60,10 +66,10 @@ export const sendChatMessage = async (messages, context) => {
       })),
     ];
 
-    const response = await ai.models.generateContent({
+    const response = await withTimeout(ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents,
-    });
+    }));
 
     return response.text.trim();
   } catch (e) {

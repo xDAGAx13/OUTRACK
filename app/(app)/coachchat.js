@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { FIREBASE_DB } from '../../FirebaseConfig';
@@ -50,6 +51,9 @@ const QUICK_PROMPTS = [
   'Give me a rest day tip',
 ];
 
+const MAX_MESSAGES_PER_SESSION = 20;
+const SEND_COOLDOWN_MS = 2000;
+
 export default function coachchat() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -58,6 +62,8 @@ export default function coachchat() {
   const [contextReady, setContextReady] = useState(false);
   const scrollRef = useRef(null);
   const router = useRouter();
+  const lastSentAt = useRef(0);
+  const userMessageCount = useRef(0);
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -92,6 +98,15 @@ export default function coachchat() {
   const sendMessage = async (text) => {
     const content = (text || input).trim();
     if (!content) return;
+
+    const now = Date.now();
+    if (now - lastSentAt.current < SEND_COOLDOWN_MS) return;
+    if (userMessageCount.current >= MAX_MESSAGES_PER_SESSION) {
+      Alert.alert("Limit reached", "You've reached the message limit for this session. Start a new session to continue.");
+      return;
+    }
+    lastSentAt.current = now;
+    userMessageCount.current += 1;
 
     const userMessage = { role: 'user', content };
     const updatedMessages = [...messages, userMessage];

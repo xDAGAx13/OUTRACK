@@ -39,7 +39,7 @@ export default function SignUp() {
       const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential)
         .then((cred) => {
-          console.log('Google Sign In Success: ', cred.user);
+          // Google sign-in success
         }).catch((e) => {
           console.error('Firebase sign-in error: ', e);
         });
@@ -47,14 +47,27 @@ export default function SignUp() {
   }, [response]);
 
   const handleSignUp = async () => {
+    if (!email.trim()) { Alert.alert("Missing field", "Please enter your email."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { Alert.alert("Invalid email", "Please enter a valid email address."); return; }
+    if (password.length < 8) { Alert.alert("Weak password", "Password must be at least 8 characters."); return; }
+    if (!/[A-Z]/.test(password)) { Alert.alert("Weak password", "Password must contain at least one uppercase letter."); return; }
+    if (!/[0-9]/.test(password)) { Alert.alert("Weak password", "Password must contain at least one number."); return; }
+
     setLoading(true);
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const userCred = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const uid = userCred.user.uid;
       await initializeUserData(uid);
       router.replace("/userinfo");
     } catch (e) {
-      Alert.alert("SignUp Failed", e.message);
+      const code = e.code;
+      if (code === "auth/email-already-in-use") {
+        Alert.alert("Sign Up Failed", "An account with this email already exists.");
+      } else if (code === "auth/too-many-requests") {
+        Alert.alert("Too many attempts", "Please try again later.");
+      } else {
+        Alert.alert("Sign Up Failed", "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

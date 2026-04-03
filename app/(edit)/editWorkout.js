@@ -7,7 +7,6 @@ import { auth } from '../../FirebaseConfig';
 export default function editWorkout() {
   const router = useRouter();
   const {workoutId} = useLocalSearchParams();
-  console.log('Workout Id: ',workoutId)
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
