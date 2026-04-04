@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import {getFirestore} from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import Constants from 'expo-constants'
 import { Platform } from 'react-native';
 
@@ -15,7 +16,8 @@ const firebaseConfig = {
 };
 
 export const firebaseapp = initializeApp(firebaseConfig);
-export const FIREBASE_DB = getFirestore(firebaseapp)
+export const FIREBASE_DB = getFirestore(firebaseapp);
+export const FIREBASE_FUNCTIONS = getFunctions(firebaseapp);
 
 function createAuth() {
   if (Platform.OS === 'web') {
